@@ -5,11 +5,13 @@ import (
 	"io/ioutil"
 	"log"
 
+	"github.com/gugazimmermann/go-protocol-buffers/src/addressbook/addressbookpb"
 	"github.com/gugazimmermann/go-protocol-buffers/src/complex/complexpb"
 	"github.com/gugazimmermann/go-protocol-buffers/src/enum_example/enumpb"
 	"github.com/gugazimmermann/go-protocol-buffers/src/simple/simplepb"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func doSimple() *simplepb.SimpleMessage {
@@ -46,8 +48,25 @@ func doComplex(ID int32) *complexpb.ComplexMessage {
 	return &cm
 }
 
+func doPerson(
+	id int32,
+	name string,
+	email string,
+	phones []*addressbookpb.Person_PhoneNumber,
+) *addressbookpb.Person {
+	pe := addressbookpb.Person{
+		Id:          id,
+		Name:        name,
+		Email:       email,
+		Phones:      phones,
+		LastUpdated: timestamppb.Now(),
+	}
+	return &pe
+}
+
 func main() {
 	// simple proto
+
 	fmt.Print("\n\n*** Simple ***\n\n")
 	sm := doSimple()
 	sm2 := &simplepb.SimpleMessage{}
@@ -56,6 +75,7 @@ func main() {
 	jsonDemo(sm)
 
 	// enum proto
+
 	fmt.Print("\n\n*** Enum ***\n\n")
 	en := doEnum(30)
 	fmt.Println(en)
@@ -67,6 +87,7 @@ func main() {
 	jsonDemo(en)
 
 	// complex proto
+
 	fmt.Print("\n\n*** Complex ***\n\n")
 	cm := doComplex(30)
 	fmt.Println(cm)
@@ -85,6 +106,47 @@ func main() {
 	readAndWrite("enum.bin", cm, cm2)
 	fmt.Println("")
 	jsonDemo(cm)
+
+	// address book proto
+	fmt.Print("\n\n*** Address Book ***\n\n")
+
+	phoneWork := &addressbookpb.Person_PhoneNumber{
+		Number: "+55 47 98870-4247",
+		Type:   addressbookpb.Person_HOME,
+	}
+	phoneHome := &addressbookpb.Person_PhoneNumber{
+		Number: "+55 47 99985-1681",
+		Type:   addressbookpb.Person_WORK,
+	}
+	person1 := doPerson(
+		1,
+		"Guga Zimmermann",
+		"gugazimmermann@gmail.com",
+		[]*addressbookpb.Person_PhoneNumber{
+			phoneWork,
+			phoneHome,
+		},
+	)
+
+	phoneMobile := &addressbookpb.Person_PhoneNumber{
+		Number: "+55 47 99924-0805",
+		Type:   addressbookpb.Person_MOBILE,
+	}
+	person2 := doPerson(
+		2,
+		"Renata Kauling Zimmermann de Negreiros",
+		"rekauling@gmail.com",
+		[]*addressbookpb.Person_PhoneNumber{
+			phoneMobile,
+		},
+	)
+
+	var people []*addressbookpb.Person
+	people = append(people, person1, person2)
+
+	ab := &addressbookpb.AddressBook{}
+	ab.People = people
+	jsonDemo(ab)
 }
 
 func readAndWrite(fileName string, pb proto.Message, pb2 proto.Message) {
