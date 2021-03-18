@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 
+	"github.com/gugazimmermann/go-protocol-buffers/src/complex/complexpb"
 	"github.com/gugazimmermann/go-protocol-buffers/src/enum_example/enumpb"
 	"github.com/gugazimmermann/go-protocol-buffers/src/simple/simplepb"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -28,6 +29,23 @@ func doEnum(ID int32) *enumpb.EnumMessage {
 	return &en
 }
 
+func doDummy(i int32, n string) *complexpb.DummyMessage {
+	dm := complexpb.DummyMessage{
+		Id:   i,
+		Name: n,
+	}
+	return &dm
+}
+
+func doComplex(ID int32) *complexpb.ComplexMessage {
+	dm1 := doDummy(23, "Dummy 23")
+	cm := complexpb.ComplexMessage{
+		Id:       ID,
+		OneDummy: dm1,
+	}
+	return &cm
+}
+
 func main() {
 	// simple proto
 	fmt.Print("\n\n*** Simple ***\n\n")
@@ -47,6 +65,26 @@ func main() {
 	readAndWrite("enum.bin", en, en2)
 	fmt.Println("")
 	jsonDemo(en)
+
+	// complex proto
+	fmt.Print("\n\n*** Complex ***\n\n")
+	cm := doComplex(30)
+	fmt.Println(cm)
+	dmTest := doDummy(66, "Dummy 66")
+	dms := []*complexpb.DummyMessage{
+		doDummy(50, "Dummy  50"),
+		doDummy(51, "Dummy  51"),
+		dmTest,
+	}
+	cm.MultipleDummy = dms
+	fmt.Println(cm)
+	dmTest.Name = "Renamed Dummy"
+	fmt.Println(cm)
+
+	cm2 := &complexpb.ComplexMessage{}
+	readAndWrite("enum.bin", cm, cm2)
+	fmt.Println("")
+	jsonDemo(cm)
 }
 
 func readAndWrite(fileName string, pb proto.Message, pb2 proto.Message) {
